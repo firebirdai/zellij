@@ -4693,10 +4693,10 @@ pub(crate) fn screen_thread_main(
                 _completion_tx, // the action ends here, dropping this will release anything
                                 // waiting for it
             ) => {
-                active_tab_and_connected_client_id!(
+                active_tab_and_connected_client_id_with_first_tab_fallback!(
                     screen,
                     client_id,
-                    |tab: &mut Tab, client_id: ClientId| tab.dump_active_terminal_screen(
+                    |tab: &mut Tab, client_id: Option<ClientId>| tab.dump_active_terminal_screen(
                         Some(file.to_string()),
                         client_id,
                         full

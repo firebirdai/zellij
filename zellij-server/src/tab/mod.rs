@@ -3879,14 +3879,21 @@ impl Tab {
     pub fn dump_active_terminal_screen(
         &mut self,
         file: Option<String>,
-        client_id: ClientId,
+        client_id: Option<ClientId>,
         full: bool,
     ) -> Result<()> {
-        let err_context =
-            || format!("failed to dump active terminal screen for client {client_id}");
+        let err_context = || "failed to dump active terminal screen".to_string();
 
-        if let Some(active_pane) = self.get_active_pane_or_floating_pane_mut(client_id) {
-            let dump = active_pane.dump_screen(full, Some(client_id));
+        let active_pane = if let Some(client_id) = client_id {
+            self.get_active_pane_or_floating_pane_mut(client_id)
+        } else {
+            // No connected client (detached session) - fall back to first active tiled pane
+            self.tiled_panes
+                .first_active_pane_id()
+                .and_then(|pane_id| self.get_pane_with_id_mut(pane_id))
+        };
+        if let Some(active_pane) = active_pane {
+            let dump = active_pane.dump_screen(full, client_id);
             self.os_api
                 .write_to_file(dump, file)
                 .with_context(err_context)?;
@@ -3933,7 +3940,7 @@ impl Tab {
         file.push(format!("{}.dump", Uuid::new_v4()));
         self.dump_active_terminal_screen(
             Some(String::from(file.to_string_lossy())),
-            client_id,
+            Some(client_id),
             true,
         )
         .with_context(err_context)?;
