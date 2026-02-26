@@ -685,8 +685,10 @@ pub enum CliAction {
     MovePaneBackwards,
     /// Clear all buffers for a focused pane
     Clear,
-    /// Dump the focused pane to a file
+    /// Dump the focused pane to a file (use "-" or omit for stdout)
     DumpScreen {
+        /// Output file path. Omit or use "-" to write to stdout.
+        #[clap(default_value = "-")]
         path: PathBuf,
 
         /// Dump the pane with full scrollback

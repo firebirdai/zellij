@@ -547,11 +547,17 @@ impl ServerOsApi for ServerOsInputOutput {
     fn write_to_file(&mut self, buf: String, name: Option<String>) -> Result<()> {
         let err_context = || "failed to write to file".to_string();
 
-        let mut f: File = match name {
-            Some(x) => File::create(x).with_context(err_context)?,
-            None => tempfile().with_context(err_context)?,
-        };
-        write!(f, "{}", buf).with_context(err_context)
+        match name.as_deref() {
+            Some("-") => write!(io::stdout(), "{}", buf).with_context(err_context),
+            Some(path) => {
+                let mut f = File::create(path).with_context(err_context)?;
+                write!(f, "{}", buf).with_context(err_context)
+            },
+            None => {
+                let mut f: File = tempfile().with_context(err_context)?;
+                write!(f, "{}", buf).with_context(err_context)
+            },
+        }
     }
 
     fn re_run_command_in_terminal(
